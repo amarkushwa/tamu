@@ -1,0 +1,119 @@
+{
+  "pii_patterns": {
+    "high_risk": {
+      "description": "PII that indicates CONFIDENTIAL classification",
+      "patterns": [
+        {
+          "name": "SSN",
+          "regex": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+          "examples": ["123-45-6789"],
+          "severity": "CRITICAL"
+        },
+        {
+          "name": "Credit Card",
+          "regex": "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b",
+          "examples": ["4532-1234-5678-9010", "4532 1234 5678 9010"],
+          "severity": "CRITICAL"
+        },
+        {
+          "name": "Bank Account",
+          "regex": "\\b(account|acct)\\s*(number|#|no\\.?)\\s*:?\\s*\\d{8,17}\\b",
+          "examples": ["Account Number: 123456789012"],
+          "severity": "CRITICAL"
+        },
+        {
+          "name": "Passport",
+          "regex": "\\b[A-Z]{1,2}\\d{6,9}\\b",
+          "examples": ["A12345678"],
+          "severity": "CRITICAL"
+        },
+        {
+          "name": "Medical Record Number",
+          "regex": "\\b(MRN|medical record)\\s*#?:?\\s*\\d{6,10}\\b",
+          "examples": ["MRN: 1234567"],
+          "severity": "CRITICAL"
+        },
+        {
+          "name": "Driver License",
+          "regex": "\\b(DL|driver'?s? license)\\s*#?:?\\s*[A-Z0-9]{5,15}\\b",
+          "examples": ["DL: A1234567"],
+          "severity": "CRITICAL"
+        }
+      ]
+    },
+    "medium_risk": {
+      "description": "PII that indicates SENSITIVE classification",
+      "patterns": [
+        {
+          "name": "Email",
+          "regex": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+          "examples": ["john.doe@example.com"],
+          "severity": "MEDIUM"
+        },
+        {
+          "name": "Phone Number",
+          "regex": "\\b(\\+?1[\\s.-]?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b",
+          "examples": ["(555) 123-4567", "+1-555-123-4567"],
+          "severity": "MEDIUM"
+        },
+        {
+          "name": "Physical Address",
+          "regex": "\\d+\\s+[A-Za-z0-9\\s,]+\\b(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr)\\b",
+          "examples": ["123 Main Street"],
+          "severity": "MEDIUM"
+        },
+        {
+          "name": "Date of Birth",
+          "regex": "\\b(DOB|birth date|date of birth)\\s*:?\\s*\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}\\b",
+          "examples": ["DOB: 01/15/1980"],
+          "severity": "MEDIUM"
+        },
+        {
+          "name": "Employee ID",
+          "regex": "\\b(employee|emp|staff)\\s*(id|#|number)\\s*:?\\s*[A-Z0-9]{4,10}\\b",
+          "examples": ["Employee ID: EMP12345"],
+          "severity": "MEDIUM"
+        }
+      ]
+    },
+    "financial_indicators": {
+      "description": "Keywords that indicate financial/confidential content",
+      "keywords": [
+        "confidential",
+        "proprietary",
+        "trade secret",
+        "internal only",
+        "not for distribution",
+        "executive compensation",
+        "merger",
+        "acquisition",
+        "revenue projection",
+        "profit margin",
+        "cost structure",
+        "pricing strategy",
+        "customer acquisition cost",
+        "burn rate",
+        "valuation",
+        "cap table"
+      ]
+    },
+    "technical_indicators": {
+      "description": "Keywords that indicate technical/confidential content",
+      "keywords": [
+        "api key",
+        "secret key",
+        "private key",
+        "password",
+        "access token",
+        "authentication",
+        "source code",
+        "algorithm",
+        "patent pending",
+        "invention disclosure",
+        "technical specification",
+        "system architecture",
+        "database schema"
+      ]
+    }
+  }
+}

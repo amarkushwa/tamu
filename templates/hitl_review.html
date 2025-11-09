@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Review Document - Gemini Classifier{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .review-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .document-info {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 30px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+
+    .info-value {
+        color: #333;
+        text-align: right;
+    }
+
+    .review-form {
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 30px;
+        margin-top: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+        transition: all 0.3s;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <h2>📝 Document Review</h2>
+
+    <div class="document-info">
+        <div class="info-row">
+            <span class="info-label">Document ID</span>
+            <span class="info-value"><code>{{ classification.document_id }}</code></span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">File Name</span>
+            <span class="info-value">{{ classification.file_name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">AI Classification</span>
+            <span class="info-value">
+                <span class="badge badge-{{ classification.final_category.lower() }}">
+                    {{ classification.final_category }}
+                </span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Confidence Score</span>
+            <span class="info-value">{{ "%.1f"|format(classification.confidence_score * 100) }}%</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Reasoning</span>
+            <span class="info-value">{{ classification.reasoning_summary }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Citation</span>
+            <span class="info-value">{{ classification.citation_snippet }}</span>
+        </div>
+        {% if classification.blockchain_tx_hash %}
+        <div class="info-row">
+            <span class="info-label">Blockchain Audit</span>
+            <span class="info-value">
+                <code>{{ classification.blockchain_tx_hash[:32] }}...</code>
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if classification.audio_summary_path %}
+    <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+        <h3 style="margin-bottom: 15px;">🔊 Audio Summary</h3>
+        <audio controls style="width: 100%;">
+            <source src="/audio/{{ classification.document_id }}" type="audio/mpeg">
+            Your browser does not support audio playback.
+        </audio>
+    </div>
+    {% endif %}
+
+    <div class="review-form">
+        <h3>SME Review</h3>
+        <p style="color: #666; margin-bottom: 20px;">
+            Review the AI classification and provide corrections if needed.
+        </p>
+
+        <form id="reviewForm">
+            <input type="hidden" id="documentId" value="{{ classification.document_id }}">
+
+            <div class="form-group">
+                <label class="form-label" for="correctedCategory">Corrected Classification</label>
+                <select id="correctedCategory" class="form-select" required>
+                    <option value="">-- Select Category --</option>
+                    <option value="UNSAFE" {% if classification.final_category == 'UNSAFE' %}selected{% endif %}>UNSAFE</option>
+                    <option value="CONFIDENTIAL" {% if classification.final_category == 'CONFIDENTIAL' %}selected{% endif %}>CONFIDENTIAL</option>
+                    <option value="SENSITIVE" {% if classification.final_category == 'SENSITIVE' %}selected{% endif %}>SENSITIVE</option>
+                    <option value="PUBLIC" {% if classification.final_category == 'PUBLIC' %}selected{% endif %}>PUBLIC</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reviewerName">Reviewer Name</label>
+                <input type="text" id="reviewerName" class="form-input" value="SME" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reviewNotes">Review Notes</label>
+                <textarea id="reviewNotes" class="form-textarea"
+                    placeholder="Explain your reasoning if you're correcting the classification..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn">Submit Review</button>
+                <a href="/hitl/queue" class="btn btn-secondary">Back to Queue</a>
+            </div>
+        </form>
+    </div>
+
+    <div id="successMessage" class="alert alert-success" style="display: none; margin-top: 20px;">
+        ✅ Review submitted successfully! Redirecting to queue...
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const data = {
+        document_id: document.getElementById('documentId').value,
+        corrected_category: document.getElementById('correctedCategory').value,
+        reviewer_name: document.getElementById('reviewerName').value,
+        notes: document.getElementById('reviewNotes').value
+    };
+
+    fetch('/hitl/submit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = '/hitl/queue';
+            }, 2000);
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error submitting review: ' + error);
+    });
+});
+</script>
+{% endblock %}

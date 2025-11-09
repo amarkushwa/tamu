@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document - Gemini Classifier{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .upload-section {
+        background: #f9fafb;
+        border: 2px dashed #667eea;
+        border-radius: 12px;
+        padding: 60px;
+        text-align: center;
+        margin: 30px 0;
+        transition: all 0.3s;
+    }
+
+    .upload-section:hover {
+        border-color: #5568d3;
+        background: #f3f4f6;
+    }
+
+    .upload-section.dragging {
+        border-color: #10b981;
+        background: #d1fae5;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .upload-icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+        color: #667eea;
+    }
+
+    .result-section {
+        display: none;
+        margin-top: 30px;
+        padding: 30px;
+        background: #f9fafb;
+        border-radius: 12px;
+    }
+
+    .result-item {
+        margin: 15px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .result-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .result-value {
+        color: #333;
+        font-size: 1.1em;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 30px;
+        background: #e5e7eb;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 20px 0;
+        display: none;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        width: 0%;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    .audio-player {
+        margin: 20px 0;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+    }
+
+    .chat-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .chat-messages {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .chat-message {
+        margin: 10px 0;
+        padding: 12px 16px;
+        border-radius: 8px;
+        max-width: 80%;
+    }
+
+    .chat-message.user {
+        background: #667eea;
+        color: white;
+        margin-left: auto;
+        text-align: right;
+    }
+
+    .chat-message.assistant {
+        background: white;
+        border: 1px solid #e5e7eb;
+        margin-right: auto;
+    }
+
+    .chat-input-container {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .send-btn {
+        padding: 12px 24px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .send-btn:hover {
+        background: #5568d3;
+    }
+
+    .send-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .typing-indicator {
+        display: none;
+        padding: 12px 16px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        max-width: 80px;
+    }
+
+    .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        margin: 0 2px;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+        }
+        30% {
+            transform: translateY(-10px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>Upload Document for Classification</h2>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.total_classifications or 0 }}</div>
+        <div class="stat-label">Total Documents</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.auto_approval_rate or 0 }}%</div>
+        <div class="stat-label">Auto-Approval Rate</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ "%.2f"|format(stats.avg_processing_time or 0) }}s</div>
+        <div class="stat-label">Avg Processing Time</div>
+    </div>
+</div>
+
+<div class="upload-section" id="uploadSection">
+    <div class="upload-icon">📄</div>
+    <h3>Drop PDF file here or click to browse</h3>
+    <p style="color: #666; margin-top: 10px;">Supports PDF files up to 50MB</p>
+    <input type="file" id="fileInput" class="file-input" accept=".pdf">
+    <button class="btn" onclick="document.getElementById('fileInput').click()" style="margin-top: 20px;">
+        Select File
+    </button>
+</div>
+
+<div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill">Processing...</div>
+</div>
+
+<div class="result-section" id="resultSection">
+    <h3>Classification Result</h3>
+
+    <div class="result-item">
+        <div class="result-label">Document ID</div>
+        <div class="result-value" id="documentId">-</div>
+    </div>
+
+    <div class="result-item">
+        <div class="result-label">Classification</div>
+        <div class="result-value">
+            <span id="classification" class="badge">-</span>
+            <span style="margin-left: 10px;">Confidence: <strong id="confidence">-</strong></span>
+        </div>
+    </div>
+
+    <div class="result-item">
+        <div class="result-label">Reasoning</div>
+        <div class="result-value" id="reasoning">-</div>
+    </div>
+
+    <div class="result-item">
+        <div class="result-label">Citation</div>
+        <div class="result-value" id="citation">-</div>
+    </div>
+
+    <div class="result-item">
+        <div class="result-label">HITL Status</div>
+        <div class="result-value">
+            <span id="hitlStatus" class="badge">-</span>
+        </div>
+    </div>
+
+    <div class="result-item">
+        <div class="result-label">Blockchain Audit</div>
+        <div class="result-value">
+            <div>Transaction: <code id="txHash">-</code></div>
+            <div>Audit Hash: <code id="auditHash">-</code></div>
+            <div>Status: <span id="blockchainStatus" class="badge">-</span></div>
+            <a id="explorerLink" href="#" target="_blank" style="display: none; margin-top: 10px; display: inline-block;">
+                View on Solana Explorer →
+            </a>
+        </div>
+    </div>
+
+    <div class="audio-player" id="audioSection" style="display: none;">
+        <div class="result-label">Audio Summary</div>
+        <audio id="audioPlayer" controls style="width: 100%; margin-top: 10px;">
+            Your browser does not support audio playback.
+        </audio>
+    </div>
+
+    <div class="chat-section" id="chatSection">
+        <div class="chat-header">
+            <h3 style="margin: 0;">💬 Ask Questions About This Document</h3>
+            <small style="color: #666;">Powered by Gemini AI</small>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message assistant">
+                👋 Hello! I'm here to help you understand this document. Ask me anything about its content, classification, or details!
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input
+                type="text"
+                id="chatInput"
+                class="chat-input"
+                placeholder="Ask a question about this document..."
+                onkeypress="if(event.key === 'Enter') sendMessage()"
+            >
+            <button class="send-btn" onclick="sendMessage()" id="sendBtn">Send</button>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <button class="btn" onclick="location.reload()">Classify Another Document</button>
+        <a href="/dashboard" class="btn" style="margin-left: 10px;">View Dashboard</a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const fileInput = document.getElementById('fileInput');
+const uploadSection = document.getElementById('uploadSection');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const resultSection = document.getElementById('resultSection');
+
+// File input change
+fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+        uploadFile(this.files[0]);
+    }
+});
+
+// Drag and drop
+uploadSection.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragging');
+});
+
+uploadSection.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragging');
+});
+
+uploadSection.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragging');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type === 'application/pdf') {
+        uploadFile(files[0]);
+    } else {
+        alert('Please drop a PDF file');
+    }
+});
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Show progress
+    uploadSection.style.display = 'none';
+    progressBar.style.display = 'block';
+    progressFill.style.width = '50%';
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Upload failed');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Check if response contains an error
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+            displayResult(data);
+        }, 500);
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        alert('Error uploading file: ' + error.message);
+        progressBar.style.display = 'none';
+        uploadSection.style.display = 'block';
+    });
+}
+
+function displayResult(data) {
+    // Show result section
+    resultSection.style.display = 'block';
+
+    // Populate fields
+    document.getElementById('documentId').textContent = data.document_id;
+
+    const classificationBadge = document.getElementById('classification');
+    classificationBadge.textContent = data.classification;
+    classificationBadge.className = 'badge badge-' + data.classification.toLowerCase();
+
+    document.getElementById('confidence').textContent = (data.confidence * 100).toFixed(1) + '%';
+    document.getElementById('reasoning').textContent = data.reasoning;
+    document.getElementById('citation').textContent = data.citation;
+
+    const hitlBadge = document.getElementById('hitlStatus');
+    hitlBadge.textContent = data.hitl_status;
+    hitlBadge.className = 'badge ' + (data.hitl_status === 'AUTO_APPROVED' ? 'badge-auto' : 'badge-review');
+
+    document.getElementById('txHash').textContent = data.blockchain.tx_hash.substring(0, 32) + '...';
+    document.getElementById('auditHash').textContent = data.blockchain.audit_hash.substring(0, 32) + '...';
+
+    const statusBadge = document.getElementById('blockchainStatus');
+    statusBadge.textContent = data.blockchain.status;
+    statusBadge.className = 'badge ' + (data.blockchain.status === 'CONFIRMED' ? 'badge-auto' : 'badge-pending');
+
+    if (data.blockchain.explorer_url) {
+        const explorerLink = document.getElementById('explorerLink');
+        explorerLink.href = data.blockchain.explorer_url;
+        explorerLink.style.display = 'inline-block';
+    }
+
+    // Audio
+    if (data.audio_available) {
+        document.getElementById('audioSection').style.display = 'block';
+        document.getElementById('audioPlayer').src = '/audio/' + data.document_id;
+    }
+
+    // Scroll to result
+    resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Chat functionality
+let currentDocumentId = null;
+let chatSessionId = null;
+
+function generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    // Generate session ID if not exists
+    if (!chatSessionId) {
+        chatSessionId = generateSessionId();
+    }
+
+    // Add user message to chat
+    addMessageToChat('user', message);
+
+    // Clear input and disable send button
+    input.value = '';
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+
+    // Show typing indicator
+    document.getElementById('typingIndicator').style.display = 'block';
+    scrollChatToBottom();
+
+    // Send to API
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message: message,
+            document_id: currentDocumentId,
+            session_id: chatSessionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide typing indicator
+        document.getElementById('typingIndicator').style.display = 'none';
+
+        // Add assistant response
+        addMessageToChat('assistant', data.message);
+
+        // Re-enable send button
+        sendBtn.disabled = false;
+
+        // Focus input
+        input.focus();
+    })
+    .catch(error => {
+        document.getElementById('typingIndicator').style.display = 'none';
+        addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
+        sendBtn.disabled = false;
+        console.error('Chat error:', error);
+    });
+}
+
+function addMessageToChat(role, message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message ' + role;
+    messageDiv.textContent = message;
+
+    // Insert before typing indicator
+    const typingIndicator = document.getElementById('typingIndicator');
+    chatMessages.insertBefore(messageDiv, typingIndicator);
+
+    scrollChatToBottom();
+}
+
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Update displayResult to set current document ID
+const originalDisplayResult = displayResult;
+displayResult = function(data) {
+    originalDisplayResult(data);
+    currentDocumentId = data.document_id;
+};
+</script>
+{% endblock %}

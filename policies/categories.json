@@ -1,0 +1,119 @@
+{
+  "categories": [
+    {
+      "name": "UNSAFE",
+      "priority": 1,
+      "description": "Content that violates safety policies, contains harmful material, illegal content, or poses security threats",
+      "criteria": [
+        "Violent, threatening, or harmful content",
+        "Illegal activities or instructions",
+        "Malware, exploits, or security vulnerabilities",
+        "Content that promotes harm to individuals or groups",
+        "Explicitly prohibited content per enterprise policies"
+      ],
+      "examples": [
+        "Documents containing malware instructions",
+        "Content with violent threats",
+        "Illegal activity documentation"
+      ],
+      "action": "REJECT - Immediate escalation required"
+    },
+    {
+      "name": "CONFIDENTIAL",
+      "priority": 2,
+      "description": "Highly sensitive information requiring strict access controls and encryption",
+      "criteria": [
+        "Trade secrets and proprietary algorithms",
+        "Financial records and banking information",
+        "Legal documents under attorney-client privilege",
+        "Merger & acquisition plans",
+        "Executive compensation details",
+        "Unreleased product roadmaps",
+        "Customer databases with PII",
+        "Source code and intellectual property"
+      ],
+      "examples": [
+        "Board meeting minutes discussing acquisition strategy",
+        "Source code for proprietary algorithms",
+        "Customer database exports with SSN/credit cards"
+      ],
+      "pii_indicators": [
+        "SSN (Social Security Numbers)",
+        "Credit card numbers",
+        "Bank account details",
+        "Medical records",
+        "Passport numbers"
+      ]
+    },
+    {
+      "name": "SENSITIVE",
+      "priority": 3,
+      "description": "Information requiring controlled access but not classified as confidential",
+      "criteria": [
+        "Internal memos and communications",
+        "Employee contact information",
+        "Draft documents not for external distribution",
+        "Internal project plans",
+        "Budget information (non-executive)",
+        "Customer feedback and survey data",
+        "Performance reviews"
+      ],
+      "examples": [
+        "Internal team meeting notes",
+        "Employee directory with email addresses",
+        "Draft marketing materials"
+      ],
+      "pii_indicators": [
+        "Email addresses",
+        "Phone numbers",
+        "Physical addresses",
+        "Employee IDs"
+      ]
+    },
+    {
+      "name": "PUBLIC",
+      "priority": 4,
+      "description": "Information approved for public distribution or general use",
+      "criteria": [
+        "Published marketing materials",
+        "Public website content",
+        "Press releases",
+        "General product information",
+        "Public documentation and manuals",
+        "Open-source code"
+      ],
+      "examples": [
+        "Company website content",
+        "Published blog posts",
+        "Product datasheets",
+        "Public API documentation"
+      ]
+    }
+  ],
+  "decision_tree": {
+    "description": "Classification must follow this sequential flow",
+    "steps": [
+      {
+        "step": 1,
+        "check": "UNSAFE",
+        "question": "Does the document contain unsafe, harmful, or prohibited content?",
+        "if_yes": "Classify as UNSAFE and stop",
+        "if_no": "Proceed to step 2"
+      },
+      {
+        "step": 2,
+        "check": "CONFIDENTIAL",
+        "question": "Does the document contain highly sensitive information, trade secrets, or high-value PII?",
+        "if_yes": "Classify as CONFIDENTIAL and stop",
+        "if_no": "Proceed to step 3"
+      },
+      {
+        "step": 3,
+        "check": "SENSITIVE",
+        "question": "Does the document contain internal information or moderate PII requiring controlled access?",
+        "if_yes": "Classify as SENSITIVE and stop",
+        "if_no": "Classify as PUBLIC"
+      }
+    ]
+  }
+}

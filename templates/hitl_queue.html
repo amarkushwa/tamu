@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}HITL Review Queue - Gemini Classifier{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .queue-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .queue-count {
+        font-size: 1.2em;
+        color: #666;
+    }
+
+    .review-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+
+    .review-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .review-content {
+        margin: 15px 0;
+    }
+
+    .review-field {
+        margin: 10px 0;
+    }
+
+    .review-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .review-value {
+        color: #333;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="queue-header">
+    <h2>🔍 HITL Review Queue</h2>
+    <div class="queue-count">
+        <strong>{{ reviews|length }}</strong> documents pending review
+    </div>
+</div>
+
+{% if reviews|length == 0 %}
+<div class="empty-state">
+    <div class="empty-icon">✅</div>
+    <h3>No documents pending review</h3>
+    <p>All classifications have been auto-approved or already reviewed.</p>
+    <a href="/" class="btn" style="margin-top: 20px;">Classify New Document</a>
+</div>
+{% else %}
+{% for review in reviews %}
+<div class="review-card">
+    <div class="review-header">
+        <div>
+            <code style="font-size: 0.9em; color: #667eea;">{{ review.document_id }}</code>
+            <div style="margin-top: 5px; color: #666;">{{ review.file_name }}</div>
+        </div>
+        <div>
+            <span class="badge badge-{{ review.final_category.lower() }}">{{ review.final_category }}</span>
+            <div style="margin-top: 5px; text-align: right; font-size: 0.9em; color: #666;">
+                Confidence: {{ "%.1f"|format(review.confidence_score * 100) }}%
+            </div>
+        </div>
+    </div>
+
+    <div class="review-content">
+        <div class="review-field">
+            <div class="review-label">Reasoning</div>
+            <div class="review-value">{{ review.reasoning_summary }}</div>
+        </div>
+
+        <div class="review-field">
+            <div class="review-label">Citation</div>
+            <div class="review-value">{{ review.citation_snippet }}</div>
+        </div>
+
+        {% if review.validation_consensus is not none %}
+        <div class="review-field">
+            <div class="review-label">Dual Validation</div>
+            <div class="review-value">
+                {% if review.validation_consensus %}
+                    <span class="badge badge-auto">Consensus Reached</span>
+                {% else %}
+                    <span class="badge badge-review">No Consensus</span>
+                {% endif %}
+                {% if review.dual_validation_pass1 %}
+                    | Pass 1: {{ "%.1f"|format(review.dual_validation_pass1 * 100) }}%
+                {% endif %}
+                {% if review.dual_validation_pass2 %}
+                    | Pass 2: {{ "%.1f"|format(review.dual_validation_pass2 * 100) }}%
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: right; margin-top: 15px;">
+        <a href="/hitl/review/{{ review.document_id }}" class="btn">Review Document →</a>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env.local
+.env.production
+
+# Data directories
+data/uploads/*
+!data/uploads/.gitkeep
+data/cache/*
+!data/cache/.gitkeep
+data/audit_logs/*
+!data/audit_logs/.gitkeep
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Compiled policy
+policies/compiled_policy.txt
+
+# Test files
+test_*.pdf
+sample_*.pdf
+
+# Audio files
+*.mp3
+*.wav

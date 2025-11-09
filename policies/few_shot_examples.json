@@ -1,0 +1,84 @@
+{
+  "few_shot_examples": [
+    {
+      "document_type": "Financial Report",
+      "content_snippet": "Q4 2024 Board Meeting - Confidential. Proposed acquisition of TechCorp for $500M. Due diligence reveals strong IP portfolio. Recommendation: Proceed with offer.",
+      "classification": "CONFIDENTIAL",
+      "confidence": 0.98,
+      "reasoning": "Contains merger/acquisition information, executive decision-making, and financial details marked as confidential. Clearly meets CONFIDENTIAL criteria.",
+      "citations": "Page 1: 'Proposed acquisition of TechCorp for $500M'"
+    },
+    {
+      "document_type": "Customer Database",
+      "content_snippet": "Customer ID: 12345\nName: John Smith\nSSN: 123-45-6789\nCredit Card: 4532-1234-5678-9010\nEmail: john@example.com",
+      "classification": "CONFIDENTIAL",
+      "confidence": 0.99,
+      "reasoning": "Contains high-risk PII including SSN and credit card numbers. Must be classified as CONFIDENTIAL per PII policy.",
+      "citations": "SSN and credit card number present in customer record"
+    },
+    {
+      "document_type": "Internal Memo",
+      "content_snippet": "Team Meeting Notes - 2024-01-15\nAttendees: Marketing team\nDiscussed Q1 campaign strategy, timeline for product launch moved to March. Action items assigned.",
+      "classification": "SENSITIVE",
+      "confidence": 0.92,
+      "reasoning": "Internal communication with team information and unreleased project timelines. No high-risk PII or trade secrets. Classified as SENSITIVE.",
+      "citations": "Internal team meeting notes with project timeline"
+    },
+    {
+      "document_type": "Employee Directory",
+      "content_snippet": "Employee Name: Jane Doe\nEmail: jane.doe@company.com\nPhone: (555) 123-4567\nDepartment: Engineering\nEmployee ID: EMP5678",
+      "classification": "SENSITIVE",
+      "confidence": 0.95,
+      "reasoning": "Contains medium-risk PII (email, phone, employee ID) in internal directory. Requires controlled access - SENSITIVE classification.",
+      "citations": "Employee contact information with internal identifiers"
+    },
+    {
+      "document_type": "Press Release",
+      "content_snippet": "FOR IMMEDIATE RELEASE\nCompany Announces New Product Line\nCity, State - Jan 15, 2024 - We are excited to announce our new cloud platform, designed to help businesses scale efficiently.",
+      "classification": "PUBLIC",
+      "confidence": 0.97,
+      "reasoning": "Explicitly marked 'FOR IMMEDIATE RELEASE'. Contains only public product information with no PII or confidential data. Clear PUBLIC classification.",
+      "citations": "Document header: 'FOR IMMEDIATE RELEASE'"
+    },
+    {
+      "document_type": "Product Datasheet",
+      "content_snippet": "Product Specifications\nModel: XYZ-2000\nDimensions: 10x8x5 inches\nWeight: 2.5 lbs\nPrice: $299.99\nAvailable at authorized retailers",
+      "classification": "PUBLIC",
+      "confidence": 0.96,
+      "reasoning": "Standard product specifications intended for public distribution. No confidential or sensitive information. PUBLIC classification appropriate.",
+      "citations": "Public product specifications"
+    },
+    {
+      "document_type": "Source Code",
+      "content_snippet": "// Proprietary Algorithm - Internal Use Only\nfunction calculatePredictiveScore(data) {\n  // Patent-pending methodology\n  const weights = [0.7, 0.2, 0.1];\n  return data.reduce((acc, val, idx) => acc + val * weights[idx], 0);\n}",
+      "classification": "CONFIDENTIAL",
+      "confidence": 0.97,
+      "reasoning": "Contains proprietary algorithm marked as internal use with patent-pending status. Source code is intellectual property. CONFIDENTIAL classification required.",
+      "citations": "Comments indicate 'Proprietary Algorithm' and 'Patent-pending methodology'"
+    },
+    {
+      "document_type": "Harmful Content",
+      "content_snippet": "Instructions for creating malicious software to exploit vulnerability CVE-2024-XXXX...",
+      "classification": "UNSAFE",
+      "confidence": 0.99,
+      "reasoning": "Contains instructions for creating malware and exploiting security vulnerabilities. Violates safety policies. UNSAFE classification mandatory.",
+      "citations": "Document contains malware creation instructions"
+    },
+    {
+      "document_type": "Marketing Campaign",
+      "content_snippet": "Draft - Internal Review\nQ2 Marketing Campaign Ideas\nTarget: Millennials interested in sustainability\nBudget: $50K\nChannels: Social media, influencer partnerships",
+      "classification": "SENSITIVE",
+      "confidence": 0.93,
+      "reasoning": "Marked as draft for internal review. Contains budget information and unreleased campaign strategy. No high-risk PII but requires controlled access - SENSITIVE.",
+      "citations": "Header: 'Draft - Internal Review', contains budget details"
+    },
+    {
+      "document_type": "API Documentation",
+      "content_snippet": "Public API Documentation v2.0\n\nEndpoint: GET /api/v2/products\nAuthentication: API key required\nReturns: List of products with public details\n\nExample Response:\n{\n  \"products\": [{\"id\": 1, \"name\": \"Widget\", \"price\": 29.99}]\n}",
+      "classification": "PUBLIC",
+      "confidence": 0.94,
+      "reasoning": "Public API documentation intended for external developers. Contains only public endpoint information. No sensitive data or credentials. PUBLIC classification.",
+      "citations": "Document title: 'Public API Documentation'"
+    }
+  ]
+}
