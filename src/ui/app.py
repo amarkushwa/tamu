@@ -8,12 +8,12 @@ from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, url_for
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
+import shutil
 
 from ..config import Config
 from ..processing import DocumentProcessor
 from ..classification import EnhancedGeminiClassifier, PolicyRAG
 from ..blockchain import SolanaAuditTrail
-from ..audio import TTSGenerator
 from ..audit_logger import AuditLogger
 from ..chat_service import DocumentChatService
 
@@ -29,7 +29,6 @@ app.config['UPLOAD_FOLDER'] = Config.UPLOAD_DIR
 policy_rag = PolicyRAG()
 classifier = EnhancedGeminiClassifier(policy_rag)
 blockchain = SolanaAuditTrail()
-tts_generator = TTSGenerator()
 audit_logger = AuditLogger()
 chat_service = DocumentChatService()
 
@@ -100,18 +99,6 @@ def upload_file():
             print(f"✗ Blockchain recording failed: {e}")
             raise
 
-        # Step 4: Generate audio summary
-        try:
-            print("Step 4: Generating audio summary...")
-            audio_path = tts_generator.generate_full_report_audio(
-                classification_result,
-                classification_result['document_id']
-            )
-            print("✓ Audio generation complete")
-        except Exception as e:
-            print(f"✗ Audio generation failed: {e}")
-            raise
-
         # Step 5: Log to database
         try:
             print("Step 5: Logging to database...")
@@ -119,9 +106,7 @@ def upload_file():
             audit_logger.log_classification(
                 classification_result,
                 processing_time,
-                blockchain_record,
-                audio_path
-            )
+                blockchain_record)
             print("✓ Database logging complete")
         except Exception as e:
             print(f"✗ Database logging failed: {e}")
@@ -143,7 +128,6 @@ def upload_file():
                 'status': blockchain_record.get('status'),
                 'explorer_url': blockchain_record.get('explorer_url')
             },
-            'audio_available': audio_path is not None,
             'processing_time': round(processing_time, 2),
             'metadata': {
                 'pages': document_data['metadata']['num_pages'],
@@ -163,6 +147,33 @@ def upload_file():
 
     except Exception as e:
         print(f"Error processing file: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/clear_documents', methods=['POST'])
+def clear_documents():
+    """Clear all ingested documents, uploaded files, and audit logs"""
+    try:
+        # Clear RAG knowledge base
+        policy_rag.clear_ingested_documents()
+
+        # Clear uploaded files
+        for item in os.listdir(Config.UPLOAD_DIR):
+            item_path = Config.UPLOAD_DIR / item
+            if item_path.is_file():
+                os.remove(item_path)
+            elif item_path.is_dir():
+                shutil.rmtree(item_path)
+        print(f"Cleared all files from upload directory: {Config.UPLOAD_DIR}")
+
+        # Clear audit logs
+        audit_logger.clear_all_logs()
+
+        return jsonify({'success': True, 'message': 'All ingested documents, uploaded files, and audit logs cleared.'}), 200
+    except Exception as e:
+        print(f"Error clearing documents: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -267,22 +278,6 @@ def get_classification(document_id):
     return jsonify(classification)
 
 
-@app.route('/audio/<document_id>')
-def get_audio(document_id):
-    """Serve audio file"""
-    classification = audit_logger.get_classification(document_id)
-
-    if not classification or not classification.get('audio_summary_path'):
-        return "Audio not found", 404
-
-    audio_path = classification['audio_summary_path']
-
-    if not os.path.exists(audio_path):
-        return "Audio file not found", 404
-
-    return send_file(audio_path, mimetype='audio/mpeg')
-
-
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """Handle chat queries about documents"""
@@ -333,7 +328,7 @@ def dashboard():
 def run_server(host='0.0.0.0', port=5000, debug=False):
     """Run Flask server"""
     print(f"\n{'='*80}")
-    print(f"Gemini Document Classifier - Web UI")
+    print(f"Torpe Hitachi Classifier - Web UI")
     print(f"{'='*80}")
     print(f"Server: http://{host}:{port}")
     print(f"Dashboard: http://{host}:{port}/dashboard")

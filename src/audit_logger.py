@@ -120,19 +120,18 @@ class AuditLogger:
                           blockchain_record: Optional[Dict] = None,
                           audio_path: Optional[str] = None) -> int:
         """
-        Log a classification result
-
-        Args:
-            classification_result: Classification result dict
-            processing_time: Processing time in seconds
-            blockchain_record: Blockchain audit record
-            audio_path: Path to audio summary file
-
-        Returns:
-            Record ID
+        Log a classification result. Uses INSERT OR REPLACE to handle re-processing.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+
+        document_id = classification_result['document_id']
+
+        # To maintain data integrity, first delete related records if we are about to replace a classification
+        # This is necessary because INSERT OR REPLACE only works on the 'classifications' table
+        cursor.execute("DELETE FROM hitl_reviews WHERE document_id = ?", (document_id,))
+        cursor.execute("DELETE FROM audit_events WHERE document_id = ?", (document_id,))
+        cursor.execute("DELETE FROM chat_history WHERE document_id = ?", (document_id,))
 
         # Extract dual validation data
         dual_val_data = classification_result.get('dual_validation_results', {})
@@ -146,15 +145,15 @@ class AuditLogger:
                 pass2_confidence = dual_val_data['pass2'] if isinstance(dual_val_data['pass2'], (int, float)) else dual_val_data['pass2'].get('confidence')
 
         cursor.execute("""
-            INSERT INTO classifications (
+            INSERT OR REPLACE INTO classifications (
                 document_id, file_name, final_category, confidence_score,
                 reasoning_summary, citation_snippet, hitl_status,
                 validation_consensus, dual_validation_pass1, dual_validation_pass2,
                 blockchain_tx_hash, blockchain_audit_hash, audio_summary_path,
-                processing_time_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                processing_time_seconds, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         """, (
-            classification_result['document_id'],
+            document_id,
             classification_result.get('file_name', 'unknown'),
             classification_result['final_category'],
             classification_result['confidence_score'],
@@ -173,7 +172,7 @@ class AuditLogger:
         record_id = cursor.lastrowid
 
         # Log audit event
-        self._log_event(cursor, classification_result['document_id'], 'CLASSIFICATION_COMPLETED', {
+        self._log_event(cursor, document_id, 'CLASSIFICATION_COMPLETED', {
             'category': classification_result['final_category'],
             'confidence': classification_result['confidence_score'],
             'hitl_status': classification_result.get('hitl_status')
@@ -407,3 +406,19 @@ class AuditLogger:
         conn.close()
 
         return [dict(row) for row in rows]
+
+    def clear_all_logs(self):
+        """Clear all data from all tables in the database."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM classifications")
+        cursor.execute("DELETE FROM hitl_reviews")
+        cursor.execute("DELETE FROM audit_events")
+        cursor.execute("DELETE FROM performance_metrics")
+        cursor.execute("DELETE FROM chat_history")
+
+        conn.commit()
+        conn.close()
+        print("All audit logs and related data cleared.")
+

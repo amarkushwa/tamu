@@ -14,9 +14,6 @@ solana>=0.34.0
 solders>=0.21.0
 base58>=2.1.1
 
-# Audio (ElevenLabs)
-elevenlabs>=1.0.0
-requests>=2.31.0
 
 # Database & Storage
 sqlalchemy>=2.0.0

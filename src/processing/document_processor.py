@@ -5,6 +5,7 @@ Handles PDF parsing, OCR, image extraction, and citation mapping
 import io
 import base64
 import hashlib
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import PyPDF2
@@ -30,10 +31,11 @@ class DocumentProcessor:
         self.full_text = ""
 
     def _generate_document_id(self) -> str:
-        """Generate unique document ID based on file hash"""
+        """Generate unique document ID based on file hash and timestamp"""
         with open(self.document_path, 'rb') as f:
             file_hash = hashlib.sha256(f.read()).hexdigest()
-        return f"DOC_{file_hash[:16]}"
+        timestamp = int(time.time() * 1000) # Milliseconds
+        return f"DOC_{file_hash[:12]}_{timestamp}"
 
     def process(self) -> Dict:
         """

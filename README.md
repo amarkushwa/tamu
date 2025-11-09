@@ -2,7 +2,7 @@
 
 **Max Winning Project: Gemini-Centric Document Classification System**
 
-A comprehensive, enterprise-grade document classification system powered by Google's Gemini 2.0 Flash, featuring RAG (Retrieval Augmented Generation), CAG (Context Augmented Generation), Solana blockchain audit trails, and ElevenLabs text-to-speech accessibility.
+A comprehensive, enterprise-grade document classification system powered by Google's Gemini 2.0 Flash, featuring RAG (Retrieval Augmented Generation), CAG (Context Augmented Generation), Solana blockchain audit trails.
 
 ## 🌟 Features
 
@@ -20,7 +20,6 @@ A comprehensive, enterprise-grade document classification system powered by Goog
 
 ### Phase 3: Auditability, UX & Compliance
 - ✅ **Solana Blockchain**: Immutable audit trails on Solana devnet
-- ✅ **ElevenLabs TTS**: Flash v2.5 model for ultra-low latency audio summaries (32 languages)
 - ✅ **SQLite Audit Logs**: Complete classification history and HITL reviews
 - ✅ **Web UI**: Flask-based interface with HITL feedback loop
 
@@ -51,10 +50,10 @@ A comprehensive, enterprise-grade document classification system powered by Goog
 └─────────┬───────────┬───────────┬───────────────────────────┘
           │           │           │
           ▼           ▼           ▼
-┌──────────────┐ ┌─────────┐ ┌──────────────┐
-│   Solana     │ │ElevenLabs│ │SQLite Audit  │
-│ Blockchain   │ │   TTS    │ │   Logger     │
-└──────────────┘ └─────────┘ └──────────────┘
+┌──────────────┐ ┌──────────────┐
+│   Solana     │ │SQLite Audit  │
+│ Blockchain   │ │   Logger     │
+└──────────────┘ └──────────────┘
                   │
                   ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -68,7 +67,6 @@ A comprehensive, enterprise-grade document classification system powered by Goog
 - Tesseract OCR
 - API Keys:
   - Google Gemini API
-  - ElevenLabs API
   - Solana Devnet access
 
 ## 🚀 Installation
@@ -114,7 +112,6 @@ The `.env` file is already configured with your API keys:
 
 ```env
 GEMINI_API_KEY=AIzaSyA5CRA7vt5rLIVzrW9mTFOTMtFCasEhxlo
-ELEVENLABS_API_KEY=sk_ba8d004de32d2f357738185dfe1fe6826a9b8e2bba9c9739
 SOLANA_CLUSTER_URL=https://api.devnet.solana.com
 ```
 
@@ -143,7 +140,6 @@ The application will be available at:
    - Confidence score
    - Reasoning and citations
    - Blockchain audit hash
-   - Audio summary (click to play)
 
 ### HITL Review Process
 
@@ -229,20 +225,6 @@ GET /api/classification/<document_id>
 ### Submit HITL Review
 ```http
 POST /hitl/submit
-Content-Type: application/json
-
-{
-  "document_id": "DOC_abc123...",
-  "corrected_category": "SENSITIVE",
-  "reviewer_name": "Jane Doe",
-  "notes": "..."
-}
-```
-
-### Get Audio Summary
-```http
-GET /audio/<document_id>
-```
 
 ## 🧪 Testing
 
@@ -272,8 +254,7 @@ Contact: press@company.com
 1. **RAG Policy Upload**: Check console for "Policy uploaded successfully"
 2. **Classification**: Verify JSON output with category, confidence, reasoning
 3. **Blockchain**: Check for transaction hash (may be simulated if devnet is down)
-4. **TTS**: Audio file should be generated in `data/cache/audio/`
-5. **Database**: SQLite file at `data/audit_logs.db`
+4. **Database**: SQLite file at `data/audit_logs.db`
 
 ## 📁 Project Structure
 
@@ -296,9 +277,6 @@ gemini-classifier/
 │   ├── blockchain/
 │   │   ├── __init__.py
 │   │   └── solana_audit.py     # Solana integration
-│   ├── audio/
-│   │   ├── __init__.py
-│   │   └── tts_generator.py    # ElevenLabs TTS
 │   └── ui/
 │       ├── __init__.py
 │       └── app.py              # Flask web application
@@ -327,7 +305,6 @@ gemini-classifier/
 | RAG | Gemini File Search | Policy knowledge grounding |
 | CAG | Gemini Caching API | Document context optimization |
 | Blockchain | Solana (Devnet) | Immutable audit trails |
-| TTS | ElevenLabs Flash v2.5 | Ultra-low latency audio (75ms) |
 | Database | SQLite | Local audit logging |
 | Web Framework | Flask | REST API & web UI |
 | OCR | Tesseract + PyMuPDF | Multi-modal document processing |
@@ -345,8 +322,6 @@ gemini-classifier/
 - **Processing Speed**: ~5-15 seconds per document (depends on page count)
 - **Auto-Approval Rate**: Target 85%+ with dual validation
 - **Confidence Threshold**: 90% for auto-approval
-- **TTS Latency**: ~75ms (ElevenLabs Flash v2.5)
-- **Supported Languages**: 32 languages (TTS)
 
 ## 🐛 Troubleshooting
 
@@ -358,9 +333,6 @@ Check that the PDF is not corrupted or password-protected
 
 ### "Blockchain recording error"
 The system will create a simulated transaction hash if Solana devnet is unavailable. This is normal for demo purposes.
-
-### "Audio generation error"
-Verify ElevenLabs API key is valid and has available quota
 
 ### Gemini API errors
 - Check API key validity
@@ -385,7 +357,6 @@ This is a demonstration project for educational purposes.
 ## 🙏 Acknowledgments
 
 - **Google Gemini**: Advanced AI classification engine
-- **ElevenLabs**: Ultra-fast, high-quality TTS
 - **Solana**: Blockchain infrastructure for audit trails
 - **Tesseract OCR**: Open-source OCR engine
 
@@ -398,4 +369,4 @@ For issues or questions about this implementation, please review:
 
 ---
 
-**Built with ❤️ using Gemini 2.0 Flash, ElevenLabs, and Solana**
+**Built with ❤️ using Gemini 2.0 Flash and Solana**

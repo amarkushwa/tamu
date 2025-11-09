@@ -1,27 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}Upload Document - Gemini Classifier{% endblock %}
+{% block title %}Upload Document - Torpe Hitachi Classifier - Web UI{% endblock %}
 
 {% block extra_styles %}
 <style>
     .upload-section {
-        background: #f9fafb;
-        border: 2px dashed #667eea;
-        border-radius: 12px;
-        padding: 60px;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border: 3px dashed var(--border);
+        border-radius: 20px;
+        padding: 4rem;
         text-align: center;
-        margin: 30px 0;
-        transition: all 0.3s;
+        margin: 2rem 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s;
+        pointer-events: none;
     }
 
     .upload-section:hover {
-        border-color: #5568d3;
-        background: #f3f4f6;
+        border-color: var(--primary);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .upload-section:hover::before {
+        opacity: 1;
     }
 
     .upload-section.dragging {
-        border-color: #10b981;
-        background: #d1fae5;
+        border-color: var(--success);
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        transform: scale(1.02);
     }
 
     .file-input {
@@ -29,166 +51,282 @@
     }
 
     .upload-icon {
-        font-size: 4em;
-        margin-bottom: 20px;
-        color: #667eea;
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        animation: float 3s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .upload-section h3 {
+        color: var(--dark);
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .upload-section p {
+        color: var(--gray);
+        margin-top: 0.75rem;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .upload-section .btn {
+        position: relative;
+        z-index: 1;
     }
 
     .result-section {
         display: none;
-        margin-top: 30px;
-        padding: 30px;
-        background: #f9fafb;
-        border-radius: 12px;
+        margin-top: 2rem;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .result-item {
-        margin: 15px 0;
-        padding: 15px;
+        margin: 1.25rem 0;
+        padding: 1.5rem;
         background: white;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s;
+    }
+
+    .result-item:hover {
+        box-shadow: var(--shadow);
+        transform: translateX(4px);
     }
 
     .result-label {
         font-weight: 600;
-        color: #666;
-        margin-bottom: 5px;
+        color: var(--gray);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .result-value {
-        color: #333;
-        font-size: 1.1em;
+        color: var(--dark);
+        font-size: 1.125rem;
+        font-weight: 500;
+    }
+
+    .result-value code {
+        background: var(--light-gray);
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 0.9em;
     }
 
     .progress-bar {
         width: 100%;
-        height: 30px;
-        background: #e5e7eb;
-        border-radius: 15px;
+        height: 8px;
+        background: var(--light-gray);
+        border-radius: 999px;
         overflow: hidden;
-        margin: 20px 0;
+        margin: 2rem 0;
         display: none;
+        position: relative;
     }
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
         width: 0%;
-        transition: width 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 999px;
+        position: relative;
     }
 
-    .audio-player {
-        margin: 20px 0;
-        padding: 20px;
-        background: white;
-        border-radius: 8px;
+    .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .progress-text {
+        text-align: center;
+        margin-top: 1rem;
+        color: var(--gray);
+        font-weight: 600;
+        font-size: 1rem;
     }
 
     .chat-section {
-        margin-top: 30px;
-        padding: 20px;
+        margin-top: 2rem;
+        padding: 2rem;
         background: white;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
     }
 
     .chat-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #667eea;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary);
+    }
+
+    .chat-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--dark);
+    }
+
+    .chat-header small {
+        color: var(--gray);
+        font-size: 0.875rem;
     }
 
     .chat-messages {
         max-height: 400px;
         overflow-y: auto;
-        padding: 20px;
-        background: #f9fafb;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        padding: 1.5rem;
+        background: var(--light-gray);
+        border-radius: 16px;
+        margin-bottom: 1.25rem;
+        scroll-behavior: smooth;
     }
 
     .chat-message {
-        margin: 10px 0;
-        padding: 12px 16px;
-        border-radius: 8px;
+        margin: 0.875rem 0;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
         max-width: 80%;
+        animation: messageSlide 0.3s ease-out;
+        box-shadow: var(--shadow-sm);
+    }
+
+    @keyframes messageSlide {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .chat-message.user {
-        background: #667eea;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         color: white;
         margin-left: auto;
         text-align: right;
+        border-bottom-right-radius: 4px;
     }
 
     .chat-message.assistant {
         background: white;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         margin-right: auto;
+        color: var(--dark);
+        border-bottom-left-radius: 4px;
     }
 
     .chat-input-container {
         display: flex;
-        gap: 10px;
+        gap: 0.75rem;
+        align-items: center;
     }
 
     .chat-input {
         flex: 1;
-        padding: 12px 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        font-size: 14px;
+        padding: 1rem 1.25rem;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s;
     }
 
     .chat-input:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
     .send-btn {
-        padding: 12px 24px;
-        background: #667eea;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
         font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        box-shadow: var(--shadow);
     }
 
     .send-btn:hover {
-        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .send-btn:active {
+        transform: translateY(0);
     }
 
     .send-btn:disabled {
-        background: #9ca3af;
+        background: var(--gray);
         cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
     }
 
     .typing-indicator {
         display: none;
-        padding: 12px 16px;
+        padding: 1rem 1.25rem;
         background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
         max-width: 80px;
+        border-bottom-left-radius: 4px;
+        box-shadow: var(--shadow-sm);
     }
 
     .typing-indicator span {
         display: inline-block;
         width: 8px;
         height: 8px;
-        background: #667eea;
+        background: var(--primary);
         border-radius: 50%;
-        margin: 0 2px;
+        margin: 0 3px;
         animation: typing 1.4s infinite;
     }
 
@@ -203,10 +341,21 @@
     @keyframes typing {
         0%, 60%, 100% {
             transform: translateY(0);
+            opacity: 0.4;
         }
         30% {
-            transform: translateY(-10px);
+            transform: translateY(-8px);
+            opacity: 1;
         }
+    }
+
+    .action-buttons {
+        margin-top: 2rem;
+        text-align: center;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 </style>
 {% endblock %}
@@ -240,8 +389,9 @@
 </div>
 
 <div class="progress-bar" id="progressBar">
-    <div class="progress-fill" id="progressFill">Processing...</div>
+    <div class="progress-fill" id="progressFill"></div>
 </div>
+<div class="progress-text" id="progressText" style="display: none;">⚡ Analyzing document with AI...</div>
 
 <div class="result-section" id="resultSection">
     <h3>Classification Result</h3>
@@ -282,27 +432,63 @@
             <div>Transaction: <code id="txHash">-</code></div>
             <div>Audit Hash: <code id="auditHash">-</code></div>
             <div>Status: <span id="blockchainStatus" class="badge">-</span></div>
-            <a id="explorerLink" href="#" target="_blank" style="display: none; margin-top: 10px; display: inline-block;">
-                View on Solana Explorer →
-            </a>
+            <a id="explorerLink" href="#" target="_blank" style="display: none; margin-top: 0.5rem; color: var(--primary); font-weight: 600;">View on Solana Explorer →</a>
         </div>
     </div>
-
-    <div class="audio-player" id="audioSection" style="display: none;">
-        <div class="result-label">Audio Summary</div>
-        <audio id="audioPlayer" controls style="width: 100%; margin-top: 10px;">
-            Your browser does not support audio playback.
-        </audio>
-    </div>
+</div>
 
     <div class="chat-section" id="chatSection">
         <div class="chat-header">
-            <h3 style="margin: 0;">💬 Ask Questions About This Document</h3>
-            <small style="color: #666;">Powered by Gemini AI</small>
+            <div>
+                <h3 style="margin: 0;">💬 Document Assistant</h3>
+                <small style="color: var(--gray);">Ask questions about your documents</small>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="loadDocumentSelector()">
+                    📁 Select Document
+                </button>
+            </div>
         </div>
+
+        <!-- Document Context Display -->
+        <div id="documentContext" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 0.875rem; opacity: 0.9;">Currently discussing:</div>
+                    <div style="font-weight: 600; font-size: 1.125rem; margin-top: 0.25rem;" id="currentDocName">-</div>
+                    <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">
+                        ID: <code style="background: rgba(255,255,255,0.2); padding: 0.125rem 0.375rem; border-radius: 4px;" id="currentDocId">-</code>
+                    </div>
+                </div>
+                <button onclick="clearDocumentContext()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">
+                    ✕ Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Document Selector Modal -->
+        <div id="documentSelectorModal" style="display: none; background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; max-height: 300px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0; color: var(--dark);">Select a Document</h4>
+                <button onclick="closeDocumentSelector()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray);">✕</button>
+            </div>
+            <div id="documentList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="text-align: center; color: var(--gray); padding: 2rem;">
+                    Loading documents...
+                </div>
+            </div>
+        </div>
+
         <div class="chat-messages" id="chatMessages">
             <div class="chat-message assistant">
-                👋 Hello! I'm here to help you understand this document. Ask me anything about its content, classification, or details!
+                👋 Hello! I'm your AI assistant. I can help you with:
+                <br><br>
+                • Answer questions about uploaded documents<br>
+                • Explain classification decisions<br>
+                • Provide document summaries<br>
+                • Compare multiple documents<br>
+                <br>
+                Click "📁 Select Document" to choose a document, or upload one above to get started!
             </div>
             <div class="typing-indicator" id="typingIndicator">
                 <span></span><span></span><span></span>
@@ -313,16 +499,17 @@
                 type="text"
                 id="chatInput"
                 class="chat-input"
-                placeholder="Ask a question about this document..."
+                placeholder="Ask a question (select a document first)..."
                 onkeypress="if(event.key === 'Enter') sendMessage()"
             >
             <button class="send-btn" onclick="sendMessage()" id="sendBtn">Send</button>
         </div>
     </div>
 
-    <div style="margin-top: 30px; text-align: center;">
-        <button class="btn" onclick="location.reload()">Classify Another Document</button>
-        <a href="/dashboard" class="btn" style="margin-left: 10px;">View Dashboard</a>
+    <div class="action-buttons">
+        <button class="btn" onclick="location.reload()">📄 Classify Another Document</button>
+        <a href="/dashboard" class="btn">📊 View Dashboard</a>
+        <button class="btn btn-danger" onclick="clearAllDocuments()">🗑️ Clear All Documents</button>
     </div>
 </div>
 
@@ -373,7 +560,12 @@ function uploadFile(file) {
     // Show progress
     uploadSection.style.display = 'none';
     progressBar.style.display = 'block';
-    progressFill.style.width = '50%';
+    document.getElementById('progressText').style.display = 'block';
+    progressFill.style.width = '30%';
+
+    setTimeout(() => {
+        progressFill.style.width = '60%';
+    }, 500);
 
     fetch('/upload', {
         method: 'POST',
@@ -403,6 +595,7 @@ function uploadFile(file) {
         console.error('Upload error:', error);
         alert('Error uploading file: ' + error.message);
         progressBar.style.display = 'none';
+        document.getElementById('progressText').style.display = 'none';
         uploadSection.style.display = 'block';
     });
 }
@@ -439,22 +632,111 @@ function displayResult(data) {
         explorerLink.style.display = 'inline-block';
     }
 
-    // Audio
-    if (data.audio_available) {
-        document.getElementById('audioSection').style.display = 'block';
-        document.getElementById('audioPlayer').src = '/audio/' + data.document_id;
-    }
-
     // Scroll to result
     resultSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Chat functionality
 let currentDocumentId = null;
+let currentDocumentName = null;
 let chatSessionId = null;
+let availableDocuments = [];
 
 function generateSessionId() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+// Load available documents for selection
+async function loadDocumentSelector() {
+    const modal = document.getElementById('documentSelectorModal');
+    const documentList = document.getElementById('documentList');
+
+    modal.style.display = 'block';
+    documentList.innerHTML = '<div style="text-align: center; color: var(--gray); padding: 2rem;">Loading documents...</div>';
+
+    try {
+        const response = await fetch('/api/classifications?limit=20');
+        const documents = await response.json();
+        availableDocuments = documents;
+
+        if (documents.length === 0) {
+            documentList.innerHTML = '<div style="text-align: center; color: var(--gray); padding: 2rem;">No documents available. Upload a document first!</div>';
+            return;
+        }
+
+        // Build document list
+        let html = '';
+        documents.forEach(doc => {
+            const isSelected = currentDocumentId === doc.document_id;
+            html += `
+                <div onclick="selectDocument('${doc.document_id}', '${doc.file_name}')"
+                     style="padding: 1rem; border: 2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'};
+                            border-radius: 12px; cursor: pointer; transition: all 0.3s;
+                            background: ${isSelected ? 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)' : 'white'};"
+                     onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateX(4px)';"
+                     onmouseout="this.style.borderColor='${isSelected ? 'var(--primary)' : 'var(--border)'}'; this.style.transform='translateX(0)';">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--dark); margin-bottom: 0.25rem;">
+                                ${isSelected ? '✓ ' : ''}${doc.file_name}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--gray);">
+                                ID: ${doc.document_id.substring(0, 20)}...
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <span class="badge badge-${doc.final_category.toLowerCase()}">${doc.final_category}</span>
+                                <span style="margin-left: 0.5rem; font-size: 0.875rem; color: var(--gray);">
+                                    ${(doc.confidence_score * 100).toFixed(1)}% confidence
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        documentList.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        documentList.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 2rem;">Error loading documents</div>';
+    }
+}
+
+function closeDocumentSelector() {
+    document.getElementById('documentSelectorModal').style.display = 'none';
+}
+
+function selectDocument(documentId, documentName) {
+    currentDocumentId = documentId;
+    currentDocumentName = documentName;
+
+    // Update context display
+    document.getElementById('documentContext').style.display = 'block';
+    document.getElementById('currentDocName').textContent = documentName;
+    document.getElementById('currentDocId').textContent = documentId.substring(0, 32) + '...';
+
+    // Update chat placeholder
+    document.getElementById('chatInput').placeholder = `Ask a question about "${documentName}"...`;
+
+    // Close selector
+    closeDocumentSelector();
+
+    // Add system message to chat
+    addMessageToChat('assistant', `📄 Now discussing: **${documentName}**. What would you like to know about this document?`);
+
+    // Focus on chat input
+    document.getElementById('chatInput').focus();
+}
+
+function clearDocumentContext() {
+    currentDocumentId = null;
+    currentDocumentName = null;
+
+    document.getElementById('documentContext').style.display = 'none';
+    document.getElementById('chatInput').placeholder = 'Ask a question (select a document first)...';
+
+    addMessageToChat('assistant', 'Document context cleared. Select a new document to continue chatting.');
 }
 
 function sendMessage() {
@@ -462,6 +744,15 @@ function sendMessage() {
     const message = input.value.trim();
 
     if (!message) return;
+
+    // Check if asking about documents in general
+    const isGeneralQuery = !currentDocumentId && (
+        message.toLowerCase().includes('document') ||
+        message.toLowerCase().includes('file') ||
+        message.toLowerCase().includes('what') ||
+        message.toLowerCase().includes('list') ||
+        message.toLowerCase().includes('show')
+    );
 
     // Generate session ID if not exists
     if (!chatSessionId) {
@@ -480,25 +771,37 @@ function sendMessage() {
     document.getElementById('typingIndicator').style.display = 'block';
     scrollChatToBottom();
 
+    // Prepare request body
+    const requestBody = {
+        message: message,
+        session_id: chatSessionId
+    };
+
+    // Only add document_id if one is selected
+    if (currentDocumentId) {
+        requestBody.document_id = currentDocumentId;
+    }
+
     // Send to API
     fetch('/api/chat', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            message: message,
-            document_id: currentDocumentId,
-            session_id: chatSessionId
-        })
+        body: JSON.stringify(requestBody)
     })
     .then(response => response.json())
     .then(data => {
         // Hide typing indicator
         document.getElementById('typingIndicator').style.display = 'none';
 
-        // Add assistant response
-        addMessageToChat('assistant', data.message);
+        // Add assistant response with enhanced formatting
+        addMessageToChat('assistant', data.message, data.context_used);
+
+        // Update session ID if provided
+        if (data.session_id) {
+            chatSessionId = data.session_id;
+        }
 
         // Re-enable send button
         sendBtn.disabled = false;
@@ -508,17 +811,37 @@ function sendMessage() {
     })
     .catch(error => {
         document.getElementById('typingIndicator').style.display = 'none';
-        addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
+        addMessageToChat('assistant', '❌ Sorry, I encountered an error. Please try again or select a document first.');
         sendBtn.disabled = false;
         console.error('Chat error:', error);
     });
 }
 
-function addMessageToChat(role, message) {
+function addMessageToChat(role, message, hasContext) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message ' + role;
-    messageDiv.textContent = message;
+
+    // Enhanced formatting for assistant messages
+    if (role === 'assistant') {
+        // Convert markdown-style bold
+        message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert bullet points
+        message = message.replace(/^• /gm, '&nbsp;&nbsp;• ');
+
+        // Convert line breaks
+        message = message.replace(/\n/g, '<br>');
+
+        // Add context indicator if applicable
+        if (hasContext && currentDocumentName) {
+            message = `<div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.5rem;">📄 Context: ${currentDocumentName}</div>` + message;
+        }
+
+        messageDiv.innerHTML = message;
+    } else {
+        messageDiv.textContent = message;
+    }
 
     // Insert before typing indicator
     const typingIndicator = document.getElementById('typingIndicator');
@@ -536,7 +859,45 @@ function scrollChatToBottom() {
 const originalDisplayResult = displayResult;
 displayResult = function(data) {
     originalDisplayResult(data);
+
+    // Automatically set the uploaded document as the chat context
     currentDocumentId = data.document_id;
+    currentDocumentName = data.file_name;
+
+    // Update context display
+    document.getElementById('documentContext').style.display = 'block';
+    document.getElementById('currentDocName').textContent = data.file_name;
+    document.getElementById('currentDocId').textContent = data.document_id.substring(0, 32) + '...';
+
+    // Update chat placeholder
+    document.getElementById('chatInput').placeholder = `Ask a question about "${data.file_name}"...`;
+
+    // Add welcome message for new document
+    addMessageToChat('assistant', `📄 Document uploaded and classified! I'm ready to answer questions about **${data.file_name}**. You can ask me about its content, classification, or any specific details.`);
 };
+
+function clearAllDocuments() {
+    if (confirm('Are you sure you want to clear all ingested documents, uploaded files, and audit logs? This action cannot be undone.')) {
+        fetch('/api/clear_documents', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // Reload the page to reflect changes
+            } else {
+                alert('Error clearing documents: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while clearing documents.');
+        });
+    }
+}
 </script>
 {% endblock %}

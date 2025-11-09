@@ -210,8 +210,13 @@ Instructions:
         """
         try:
             # Check if user is asking about available documents
-            if any(keyword in message.lower() for keyword in ['documents', 'files', 'what do you have', 'list']):
+            if any(keyword in message.lower() for keyword in ['documents', 'files', 'what do you have', 'list', 'show', 'available']):
                 return self._list_available_documents()
+
+            # Check if user is asking a question that needs a document
+            question_keywords = ['what', 'how', 'why', 'when', 'where', 'who', 'contains', 'about', 'explain', 'describe', 'summarize', 'summary']
+            if any(keyword in message.lower() for keyword in question_keywords):
+                return self._suggest_document_selection()
 
             # Get recent chat history
             chat_history = self.audit_logger.get_chat_history(session_id, limit=10)
@@ -220,7 +225,7 @@ Instructions:
             conversation_parts = [
                 "You are a helpful AI assistant for a document classification system. "
                 "You can answer questions about documents that have been uploaded and classified. "
-                "Ask users to specify a document ID if they want to query specific documents."
+                "Be friendly and guide users to select a document if they're asking document-specific questions."
             ]
 
             for msg in chat_history[:-1]:
@@ -239,6 +244,31 @@ Instructions:
         except Exception as e:
             print(f"Chat error: {e}")
             return f"I encountered an error: {str(e)}"
+
+    def _suggest_document_selection(self) -> str:
+        """
+        Suggest user to select a document
+
+        Returns:
+            Suggestion message
+        """
+        classifications = self.audit_logger.get_all_classifications(limit=5)
+
+        if not classifications:
+            return ("📄 **No documents available yet.**\n\n"
+                    "Please upload a document first using the upload area above. "
+                    "Once uploaded, I'll be able to answer questions about it!")
+
+        doc_preview = "\n".join([
+            f"• **{doc['file_name']}** ({doc['final_category']})"
+            for doc in classifications[:3]
+        ])
+
+        return (f"📄 **I'd be happy to help!**\n\n"
+                f"To answer your question, please select a document from the list. "
+                f"Click the **📁 Select Document** button above.\n\n"
+                f"**Recently classified documents:**\n{doc_preview}"
+                + ("\n• *...and more*" if len(classifications) > 3 else ""))
 
     def _list_available_documents(self) -> str:
         """

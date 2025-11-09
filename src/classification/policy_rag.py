@@ -268,3 +268,25 @@ class PolicyRAG:
 
         # Re-upload policy to update RAG
         self.upload_policy_to_gemini()
+
+    def clear_ingested_documents(self):
+        """
+        Clear all HITL-validated examples from the knowledge base
+        """
+        examples_path = self.policy_dir / "few_shot_examples.json"
+
+        # Load existing examples
+        with open(examples_path, 'r') as f:
+            data = json.load(f)
+
+        # Clear examples
+        data['few_shot_examples'] = []
+
+        # Save updated examples
+        with open(examples_path, 'w') as f:
+            json.dump(data, f, indent=2)
+
+        print("Cleared all HITL examples from the knowledge base.")
+
+        # Re-upload policy to update RAG
+        self.upload_policy_to_gemini()

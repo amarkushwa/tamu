@@ -45,8 +45,7 @@ class Config:
 
         if not cls.GEMINI_API_KEY:
             errors.append("GEMINI_API_KEY is required")
-        if not cls.ELEVENLABS_API_KEY:
-            errors.append("ELEVENLABS_API_KEY is required")
+
         if not cls.SOLANA_CLUSTER_URL:
             errors.append("SOLANA_CLUSTER_URL is required")
 

@@ -25,7 +25,6 @@ if __name__ == '__main__':
     ║  • RAG (Policy Knowledge Base) + CAG (Document Caching)      ║
     ║  • Dual-Layer Validation with Consensus Logic                ║
     ║  • Solana Blockchain for Immutable Audit Trails              ║
-    ║  • ElevenLabs Flash v2.5 for TTS Accessibility               ║
     ║  • SQLite Audit Logging                                      ║
     ║  • Web UI with HITL Feedback Loop                            ║
     ║                                                              ║
@@ -33,4 +32,4 @@ if __name__ == '__main__':
     """)
 
     # Run Flask server (using port 5001 to avoid macOS AirPlay on 5000)
-    run_server(host='0.0.0.0', port=5001, debug=True)
+    run_server(host='0.0.0.0', port=5005, debug=True)
